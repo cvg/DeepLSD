@@ -1,0 +1,16 @@
+pyyaml
+torch==1.10.1
+torchvision==0.11.2
+numpy
+matplotlib
+brewer2mpl
+opencv-python==4.0.1.23
+opencv-contrib-python==4.0.1.23
+tensorboard==1.14
+omegaconf
+tqdm
+future  # tensorboard dependency
+kornia
+shapely
+scikit-image
+h5py
