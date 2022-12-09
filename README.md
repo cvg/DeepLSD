@@ -1,15 +1,20 @@
 # DeepLSD
-Implementation of the paper "DeepLSD: Line Segment Detection and Refinement with Deep Image Gradients". DeepLSD is a generic line detector that combines the robustness of deep learning with the accuracy of handcrafted detectors. By predicting a line distance and angle fields, it can furthermore refine existing line segments through an optimization.
+Implementation of the paper "DeepLSD: Line Segment Detection and Refinement with Deep Image Gradients". **DeepLSD is a generic line detector that combines the robustness of deep learning with the accuracy of handcrafted detectors**. It can be used to extract **generic line segments from images in-the-wild**, and is **suitable for any task requiring high precision**, such as homography estimation, visual localization, and 3D reconstruction. By predicting a line distance and angle fields, **it can furthermore refine any existing line segments** through an optimization.
 
 Demo of the lines detected by DeepLSD, its line distance field, and line angle field:
+
 ![demo_deeplsd](assets/videos/demo_deeplsd.gif)
 
 ## Installation
-Install the necessary requirements and third party libraries:
+First clone the repository and its submodules:
+```
+git clone --recurse-submodules git@github.com:rpautrat/DeepLSD.git
+cd DeepLSD
+```
+Make sure that the [Ceres](http://ceres-solver.org/) library is installed, then install the necessary requirements and third party libraries:
 ```
 bash install.sh
 ```
-In addition to that, DeepLSD requires the [Ceres](http://ceres-solver.org/) library to be installed.
 
 This repo uses a base experiment folder (EXPER_PATH) containing the output of all trainings, and a base dataset path (DATA_PATH) containing all the evaluation and training datasets. You can set the path to these two folders in the file `deeplsd/settings.py`.
 
@@ -92,7 +97,7 @@ On York Urban, this could look like:
 python -m deeplsd.scripts.evaluate_vp_estimation york_urban yud_outputs yud_evaluation deeplsd
 ```
 
-Note that the 3D line reconstruction and visual localization applications of the paper will be released in a separate repository.
+**Note:** the 3D line reconstruction and visual localization applications of the paper will be released in a separate repository.
 
 ## Bibtex
 If you use this code in your project, please consider citing the following paper:
