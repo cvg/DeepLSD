@@ -8,7 +8,7 @@ Demo of the lines detected by DeepLSD, its line distance field, and line angle f
 ## Installation
 First clone the repository and its submodules:
 ```
-git clone --recurse-submodules git@github.com:cvg/DeepLSD.git
+git clone --recurse-submodules https://github.com/cvg/DeepLSD.git
 cd DeepLSD
 ```
 Make sure that the [Ceres](http://ceres-solver.org/) library is installed, then install the necessary requirements and third party libraries:
