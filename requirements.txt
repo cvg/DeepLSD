@@ -4,8 +4,8 @@ torchvision==0.11.2
 numpy
 matplotlib
 brewer2mpl
-opencv-python==4.0.1.23
-opencv-contrib-python==4.0.1.23
+opencv-python
+opencv-contrib-python
 tensorboard==1.14
 omegaconf
 tqdm

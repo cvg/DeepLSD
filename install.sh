@@ -1,3 +1,4 @@
+pip install scikit-build
 pip install -r requirements.txt  # Install the requirements
 cd third_party/progressive-x/graph-cut-ransac/build; cmake ..; make -j8; cd ../../../..  # Install the C++ library Graph Cut RANSAC
 cd third_party/progressive-x/build; cmake ..; make -j8; cd ../../..  # Install the C++ library Progressive-X
