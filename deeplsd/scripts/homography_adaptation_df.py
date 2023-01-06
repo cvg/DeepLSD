@@ -155,7 +155,7 @@ def export_ha(images_list, output_folder, num_H=100,
     randomize_contrast = random_contrast() if rdm_contrast else None
     
     # Process each image in parallel
-    Parallel(n_jobs=n_jobs, backend='loky')(delayed(process_image)(
+    Parallel(n_jobs=n_jobs, backend='multiprocessing')(delayed(process_image)(
         img_path, randomize_contrast, num_H, output_folder)
                                             for img_path in tqdm(image_files))
 
