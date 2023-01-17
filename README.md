@@ -11,7 +11,13 @@ First clone the repository and its submodules:
 git clone --recurse-submodules https://github.com/cvg/DeepLSD.git
 cd DeepLSD
 ```
-Make sure that [OpenCV](https://opencv.org/) and the [Ceres](http://ceres-solver.org/) library are installed, then install the necessary requirements and third party libraries:
+Dependencies that need to be installed on your system:
+- [OpenCV](https://opencv.org/)
+- [GFlags](https://github.com/gflags/gflags)
+- [GLog](https://github.com/google/glog)
+- [Ceres](http://ceres-solver.org/)
+
+Once these libraries are installed, you can proceed with the installation of the necessary requirements and third party libraries:
 ```
 bash install.sh
 ```
