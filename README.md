@@ -1,5 +1,5 @@
 # DeepLSD
-Implementation of the paper [DeepLSD: Line Segment Detection and Refinement with Deep Image Gradients](https://arxiv.org/abs/2212.07766). **DeepLSD is a generic line detector that combines the robustness of deep learning with the accuracy of handcrafted detectors**. It can be used to extract **generic line segments from images in-the-wild**, and is **suitable for any task requiring high precision**, such as homography estimation, visual localization, and 3D reconstruction. By predicting a line distance and angle fields, **it can furthermore refine any existing line segments** through an optimization.
+Implementation of the paper [DeepLSD: Line Segment Detection and Refinement with Deep Image Gradients](https://arxiv.org/abs/2212.07766), accepted at CVPR 2023. **DeepLSD is a generic line detector that combines the robustness of deep learning with the accuracy of handcrafted detectors**. It can be used to extract **generic line segments from images in-the-wild**, and is **suitable for any task requiring high precision**, such as homography estimation, visual localization, and 3D reconstruction. By predicting a line distance and angle fields, **it can furthermore refine any existing line segments** through an optimization.
 
 Demo of the lines detected by DeepLSD, its line distance field, and line angle field:
 
@@ -108,10 +108,10 @@ python -m deeplsd.scripts.evaluate_vp_estimation york_urban yud_outputs yud_eval
 ## Bibtex
 If you use this code in your project, please consider citing the following paper:
 ```bibtex
-@InProceedings{Pautrat_2022_DeepLSD,
+@InProceedings{Pautrat_2023_DeepLSD,
     author = {Pautrat, Rémi and Barath, Daniel and Larsson, Viktor and Oswald, Martin R. and Pollefeys, Marc},
     title = {DeepLSD: Line Segment Detection and Refinement with Deep Image Gradients},
-    booktitle = {arXiv},
-    year = {2022},
+    booktitle = {Computer Vision and Pattern Recognition (CVPR)},
+    year = {2023},
 }
 ```
