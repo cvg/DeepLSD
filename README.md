@@ -16,6 +16,7 @@ Dependencies that need to be installed on your system:
 - [GFlags](https://github.com/gflags/gflags)
 - [GLog](https://github.com/google/glog)
 - [Ceres](http://ceres-solver.org/)
+- We recommend compiling and running DeepLSD with GCC 9 and CUDA >= 11. Other combinations may work as well.
 
 Once these libraries are installed, you can proceed with the installation of the necessary requirements and third party libraries:
 ```
