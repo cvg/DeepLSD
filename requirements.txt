@@ -15,3 +15,7 @@ cython
 shapely
 scikit-image
 h5py
+flow_vis
+
+./third_party/pytlsd
+./third_party/pytlbd
