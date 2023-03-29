@@ -209,8 +209,13 @@ tuple<vector<array<double, 4>>, vector<int>, vector<array<double, 3>>> optimize_
                     }
                 }
                 if (problem.HasParameterBlock(&(vps[i])[0])) {
+#ifdef CERES_PARAMETERIZATION_ENABLED
                     ceres::LocalParameterization* homo3d_parameterization = new ceres::HomogeneousVectorParameterization(3);
                     problem.SetParameterization(&(vps[i])[0], homo3d_parameterization);
+#else
+                    ceres::Manifold* homo3d_manifold = new ceres::SphereManifold<3>;
+                    problem.SetManifold(&(vps[i])[0], homo3d_manifold);
+#endif
                 }
                 // Solve the optimization problem
                 Solve(options, &problem, &summary);
