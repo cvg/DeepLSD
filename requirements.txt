@@ -10,7 +10,7 @@ tensorboard
 omegaconf
 tqdm
 future  # tensorboard dependency
-kornia
+kornia>=0.6
 cython
 shapely
 scikit-image
