@@ -9,9 +9,7 @@ import torch.nn.functional as F
 
 from .base_model import BaseModel
 from .backbones.vgg_unet import VGGUNet
-from ..geometry.line_utils import (merge_lines, get_line_orientation,
-                                   filter_outlier_lines)
-from ..geometry.homography_adaptation import torch_homography_adaptation
+from ..geometry.line_utils import merge_lines, filter_outlier_lines
 from ..utils.tensor import preprocess_angle
 from pytlsd import lsd
 
@@ -158,22 +156,6 @@ class DeepLSD(BaseModel):
                                 overlap_thresh=0).astype(np.float32)
 
         return lines
-
-    def ha(self, data, num_H=10, aggregation='median'):
-        """ Perform homography augmentation at test time on a single image. """
-        df, line_level, _ = torch_homography_adaptation(
-            data['image'], self, num_H, aggregation=aggregation)
-        outputs = {'df': df, 'line_level': line_level}
-
-        # Detect line segments
-        if self.conf.detect_lines:
-            np_img = (data['image'].cpu().numpy()[0, 0] * 255).astype(np.uint8)
-            np_df = df.cpu().numpy()
-            np_ll = line_level.cpu().numpy()
-            outputs['lines'] = self.detect_afm_lines(
-                np_img, np_df, np_ll, **self.conf.line_detection_params)
-
-        return outputs
 
     def loss(self, pred, data):
         raise NotImplementedError()
