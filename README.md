@@ -3,7 +3,9 @@ Implementation of the paper [DeepLSD: Line Segment Detection and Refinement with
 
 Demo of the lines detected by DeepLSD, its line distance field, and line angle field:
 
-![demo_deeplsd](assets/videos/demo_deeplsd.gif)
+<p align="center">
+<img width=40% src="assets/videos/demo_deeplsd.gif" style="margin:-300px 0px -300px 0px">
+</p>
 
 ## Installation
 First clone the repository and its submodules:
