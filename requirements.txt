@@ -16,6 +16,7 @@ shapely
 scikit-image
 h5py
 flow_vis
+jupyter
+seaborn
 
 ./third_party/pytlsd
-./third_party/pytlbd

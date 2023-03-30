@@ -14,40 +14,27 @@ from ..geometry.line_utils import (merge_lines, get_line_orientation,
 from ..geometry.homography_adaptation import torch_homography_adaptation
 from ..utils.tensor import preprocess_angle
 from pytlsd import lsd
-from line_refinement import line_optim
 
 
 class DeepLSD(BaseModel):
     default_conf = {
-        'tiny': False,
-        'sharpen': True,
         'line_neighborhood': 5,
-        'loss_weights': {
-            'df': 1.,
-            'angle': 1.,
-        },
         'multiscale': False,
         'scale_factors': [1., 1.5],
-        'detect_lines': False,
+        'detect_lines': True,
         'line_detection_params': {
             'merge': False,
             'grad_nfa': True,
-            'optimize': False,
-            'use_vps': False,
-            'optimize_vps': False,
             'filtering': 'normal',
             'grad_thresh': 3,
-            'lambda_df': 1.,
-            'lambda_grad': 1.,
-            'lambda_vp': 0.5,
         },
     }
     required_data_keys = ['image']
 
     def _init(self, conf):
         # Base network
-        self.backbone = VGGUNet(tiny=self.conf.tiny)
-        dim = 32 if self.conf.tiny else 64
+        self.backbone = VGGUNet(tiny=False)
+        dim = 64
 
         # Predict the distance field and angle to the nearest line
         # DF head
@@ -93,11 +80,8 @@ class DeepLSD(BaseModel):
             base = self.backbone(data['image'])
 
             # DF prediction
-            if self.conf.sharpen:
-                outputs['df_norm'] = self.df_head(base).squeeze(1)
-                outputs['df'] = self.denormalize_df(outputs['df_norm'])
-            else:
-                outputs['df'] = self.df_head(base).squeeze(1)
+            outputs['df_norm'] = self.df_head(base).squeeze(1)
+            outputs['df'] = self.denormalize_df(outputs['df_norm'])
 
             # Closest line direction prediction
             outputs['line_level'] = self.angle_head(base).squeeze(1) * np.pi
@@ -108,15 +92,10 @@ class DeepLSD(BaseModel):
             np_img = (data['image'].cpu().numpy()[:, 0] * 255).astype(np.uint8)
             np_df = outputs['df'].cpu().numpy()
             np_ll = outputs['line_level'].cpu().numpy()
-            vps, vp_labels = [], []
             for img, df, ll in zip(np_img, np_df, np_ll):
-                line, label, vp = self.detect_afm_lines(
+                line = self.detect_afm_lines(
                     img, df, ll, **self.conf.line_detection_params)
                 lines.append(line)
-                vp_labels.append(label)
-                vps.append(vp)
-            outputs['vp_labels'] = vp_labels
-            outputs['vps'] = vps
             outputs['lines'] = lines
 
         return outputs
@@ -132,10 +111,7 @@ class DeepLSD(BaseModel):
             img = F.interpolate(data['image'], scale_factor=s, mode='bilinear')
             with torch.no_grad():
                 base = self.backbone(img)
-                if self.conf.sharpen:
-                    pred_df.append(self.denormalize_df(self.df_head(base)))
-                else:
-                    pred_df.append(self.df_head(base))
+                pred_df.append(self.denormalize_df(self.df_head(base)))
                 pred_angle.append(self.angle_head(base) * np.pi)
 
         # Fuse the outputs together
@@ -151,13 +127,11 @@ class DeepLSD(BaseModel):
         return out
 
     def detect_afm_lines(
-        self, img, df, line_level, optimize=False, use_vps=False,
-        optimize_vps=False, filtering='normal', merge=False,
-        grad_thresh=3, lambda_df=1., lambda_grad=1., lambda_vp=0.5,
-        grad_nfa=True):
-        """ Detect lines from the offset field and potentially the line angle.
-            Offer the possibility to ignore line in high DF values, to merge
-            close-by lines and to optimize them to better fit the DF + angle. """
+        self, img, df, line_level, filtering='normal',
+        merge=False, grad_thresh=3, grad_nfa=True):
+        """ Detect lines from the line distance and angle field.
+            Offer the possibility to ignore line in high DF values,
+            and to merge close-by lines. """
         gradnorm = np.maximum(5 - df, 0).astype(np.float64)
         angle = line_level.astype(np.float64) - np.pi / 2
         angle = preprocess_angle(angle, img, mask=True)[0]
@@ -178,33 +152,12 @@ class DeepLSD(BaseModel):
                 use_grad=False, inlier_thresh=0.5, df_thresh=df_thresh,
                 ang_thresh=ang_thresh)[0][:, :, [1, 0]]
 
-        # Optimize the lines with respect to the DF and line level
-        vps = np.array([])
-        vp_labels = np.array([-1] * len(lines))
-        if optimize:
-            if merge:
-                lines = merge_lines(lines, thresh=4,
-                                    overlap_thresh=0).astype(np.float32)
-
-            rows, cols = df.shape
-            angle, _ = preprocess_angle(
-                line_level - np.pi / 2, img)
-            orientations = get_line_orientation(lines[:, :, [1, 0]],
-                                                angle)[:, None]
-            oriented_lines = np.concatenate([lines.reshape(-1, 4),
-                                             orientations], axis=1)
-            lines, vp_labels, vps = line_optim(
-                oriented_lines, (df ** (1/4)).flatten(), angle.flatten(),
-                rows, cols, use_vps, optimize_vps,
-                lambda_df, lambda_grad, lambda_vp)
-            lines = np.array(lines).reshape(-1, 2, 2).astype(np.float32)
-
         # Merge close-by lines together
-        if merge and not optimize:
+        if merge:
             lines = merge_lines(lines, thresh=4,
                                 overlap_thresh=0).astype(np.float32)
 
-        return lines, vp_labels, vps
+        return lines
 
     def ha(self, data, num_H=10, aggregation='median'):
         """ Perform homography augmentation at test time on a single image. """
@@ -218,48 +171,12 @@ class DeepLSD(BaseModel):
             np_df = df.cpu().numpy()
             np_ll = line_level.cpu().numpy()
             outputs['lines'] = self.detect_afm_lines(
-                np_img, np_df, np_ll, **self.conf.line_detection_params)[0]
+                np_img, np_df, np_ll, **self.conf.line_detection_params)
 
         return outputs
 
     def loss(self, pred, data):
-        outputs = {}
-        loss = 0
-
-        # Retrieve the mask of valid pixels
-        valid_mask = data['ref_valid_mask']
-        valid_norm = valid_mask.sum(dim=[1, 2])
-        valid_norm[valid_norm == 0] = 1
-
-        # Retrieve the mask of pixels close to GT lines
-        line_mask = (valid_mask
-                     * (data['df'] < self.conf.line_neighborhood).float())
-        line_norm = line_mask.sum(dim=[1, 2])
-        line_norm[line_norm == 0] = 1
-
-        # DF loss, with supervision only on the lines neighborhood
-        if self.conf.sharpen:
-            df_loss = self.l1_loss_fn(pred['df_norm'],
-                                      self.normalize_df(data['df']))
-        else:
-            df_loss = self.l1_loss_fn(pred['df'], data['df'])
-            df_loss /= self.conf.line_neighborhood
-        df_loss = (df_loss * line_mask).sum(dim=[1, 2]) / line_norm
-        df_loss *= self.conf.loss_weights.df
-        loss += df_loss
-        outputs['df_loss'] = df_loss
-
-        # Angle loss, with supervision only on the lines neighborhood
-        angle_loss = torch.minimum(
-            (pred['line_level'] - data['line_level']) ** 2,
-            (np.pi - (pred['line_level'] - data['line_level']).abs()) ** 2)
-        angle_loss = (angle_loss * line_mask).sum(dim=[1, 2]) / line_norm
-        angle_loss *= self.conf.loss_weights.angle
-        loss += angle_loss
-        outputs['angle_loss'] = angle_loss
-
-        outputs['total'] = loss
-        return outputs
+        raise NotImplementedError()
 
     def metrics(self, pred, data):
-        return {}
+        raise NotImplementedError()

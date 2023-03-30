@@ -13,6 +13,19 @@ First clone the repository and its submodules:
 git clone --recurse-submodules https://github.com/cvg/DeepLSD.git
 cd DeepLSD
 ```
+
+### Quickstart install (for inference only)
+
+To test the pre-trained model on your images, without the final line refinement, the following installation is sufficient:
+```
+bash quickstart_install.sh
+```
+You can then test it with the notebook `notebooks/quickstart_demo.ipynb`.
+
+### Full install
+
+Follow these instructions if you wish to re-train DeepLSD, evaluate it, or use the final step of line refinement.
+
 Dependencies that need to be installed on your system:
 - [OpenCV](https://opencv.org/)
 - [GFlags](https://github.com/gflags/gflags)
