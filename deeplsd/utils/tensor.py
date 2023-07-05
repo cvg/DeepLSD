@@ -1,10 +1,10 @@
 import numpy as np
 from skimage import measure as skmeasure
-from torch._six import string_classes
 import collections.abc as collections
 import torch
 import cv2
 
+string_classes = str
 
 def map_tensor(input_, func):
     if isinstance(input_, torch.Tensor):
