@@ -60,7 +60,7 @@ def get_dataloader(dataset):
 def evaluate(dataset, line_folder, output_folder, method, thresh):
     # Get the dataloader
     dataloader = get_dataloader(dataset)
-    min_length = 20
+    min_length = 20 if dataset == 'hpatches' else 0
 
     # Gather all metrics across all line detections
     (struct_rep, struct_loc_error, orth_rep, orth_loc_error,
