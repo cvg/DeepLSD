@@ -30,7 +30,7 @@ Dependencies that need to be installed on your system:
 - [OpenCV](https://opencv.org/)
 - [GFlags](https://github.com/gflags/gflags)
 - [GLog](https://github.com/google/glog)
-- [Ceres 2.0.0](http://ceres-solver.org/)
+- [Ceres](http://ceres-solver.org/)
 - DeepLSD was successfully tested with GCC 9, Python 3.7, and CUDA 11. Other combinations may work as well.
 
 Once these libraries are installed, you can proceed with the installation of the necessary requirements and third party libraries:
