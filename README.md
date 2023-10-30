@@ -41,7 +41,7 @@ bash install.sh
 This repo uses a base experiment folder (EXPER_PATH) containing the output of all trainings, and a base dataset path (DATA_PATH) containing all the evaluation and training datasets. You can set the path to these two folders in the file `deeplsd/settings.py`.
 
 ## Usage
-We provide two pre-trained models for DeepLSD: [deeplsd_wireframe.tar](https://www.polybox.ethz.ch/index.php/s/FQWGkH57UNTqlJZ) and [deeplsd_md.tar](https://www.polybox.ethz.ch/index.php/s/XVb30sUyuJttFys), trained respectively on the Wireframe and MegaDepth datasets. The former can be used for easy indoor datasets, while the latter is more generic and works outdoors and on more challenging scenes.
+We provide two pre-trained models for DeepLSD: [deeplsd_wireframe.tar](https://cvg-data.inf.ethz.ch/DeepLSD/deeplsd_wireframe.tar) and [deeplsd_md.tar](https://cvg-data.inf.ethz.ch/DeepLSD/deeplsd_md.tar), trained respectively on the Wireframe and MegaDepth datasets. The former can be used for easy indoor datasets, while the latter is more generic and works outdoors and on more challenging scenes.
 The example notebook `notebooks/demo_line_detection.ipynb` showcases how to use DeepLSD in practice. Please refer to the comments on the config of this notebook to understand the usage of each hyperparameter.
 
 You can download the two models with the following command:
