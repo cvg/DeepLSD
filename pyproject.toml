@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "deeplsd"
+version = "0.0.1"
+description = "Python library for DeepLSD inference"
+readme = "README.md"
+authors = ["DeepLSD Team", "Instrumental ML team"]
+packages = [{include = "deeplsd"}]
+
+[tool.poetry.dependencies]
+python = "~3.10"
+numpy = "^1.22.0"
+opencv-python-headless = "4.5.5.64"
+omegaconf = "^2.1.0"
+torch = {version = "^2.2.0", source = "torchcpu"}
+torchvision = {version = "^0.17.0", source = "torchcpu"}
+# pytlsd = {version = "0.2.0"}
+
+# ToDo: add training dependencies
+# ToDo: pin correct version of modules in the third_party folder
+
+[[tool.poetry.source]]
+name = "torchcpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "supplemental"
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
