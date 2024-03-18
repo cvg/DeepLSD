@@ -56,7 +56,7 @@ class BaseModel(nn.Module, metaclass=ABCMeta):
         if isinstance(conf, dict):
             conf = OmegaConf.create(conf)
         self.conf = conf = OmegaConf.merge(default_conf, conf)
-        OmegaConf.set_readonly(conf, True)
+        OmegaConf.set_readonly(conf, False)
         self.required_data_keys = copy(self.required_data_keys)
         self._init(conf)
 
