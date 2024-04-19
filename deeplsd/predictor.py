@@ -40,7 +40,10 @@ class Predictor:
         self.net.conf['line_detection_params']['filtering'] = new_filtering
 
     def predict(self, image: np.ndarray):
-        gray_img = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        if len(image.shape) != 2:
+            gray_img = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        else:
+            gray_img = image
         inputs = {'image': torch.tensor(gray_img, dtype=torch.float, device=self.device)[None, None] / 255.}
         with torch.no_grad():
             out = self.net(inputs)
