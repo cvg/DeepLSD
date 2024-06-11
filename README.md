@@ -47,8 +47,8 @@ The example notebook `notebooks/demo_line_detection.ipynb` showcases how to use 
 You can download the two models with the following command:
 ```
 mkdir weights
-wget https://www.polybox.ethz.ch/index.php/s/FQWGkH57UNTqlJZ/download -O weights/deeplsd_wireframe.tar
-wget https://www.polybox.ethz.ch/index.php/s/XVb30sUyuJttFys/download -O weights/deeplsd_md.tar
+wget https://cvg-data.inf.ethz.ch/DeepLSD/deeplsd_wireframe.tar -O weights/deeplsd_wireframe.tar
+wget https://cvg-data.inf.ethz.ch/DeepLSD/deeplsd_md.tar -O weights/deeplsd_md.tar
 ```
 
 ## Ground truth (GT) generation
