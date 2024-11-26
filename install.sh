@@ -6,4 +6,5 @@ pip install -e third_party/progressive-x  # Install the Python bindings of Progr
 cd third_party/afm_lib/afm_op; python setup.py build_ext --inplace; rm -rf build; cd ..; pip install -e .; cd ../..  # Install the Cuda code to generate AFM from lines (taken from https://github.com/cherubicXN/afm_cvpr2019)
 pip install -e line_refinement  # Install the Python bindings to optimize lines wrt a distance/angle field
 pip install -e third_party/homography_est  # Install the code for homography estimation from lines
+pip install -e third_party/pytlbd  # Install the LBD line matcher for evaluation
 pip install -e .  # Install DeepLSD

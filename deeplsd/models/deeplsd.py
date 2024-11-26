@@ -9,8 +9,8 @@ import torch.nn.functional as F
 
 from .base_model import BaseModel
 from .backbones.vgg_unet import VGGUNet
-from ..geometry.line_utils import (merge_lines,
-                                   get_line_orientation, filter_outlier_lines)
+from ..geometry.line_utils import (merge_lines, get_line_orientation,
+                                   filter_outlier_lines)
 from ..geometry.homography_adaptation import torch_homography_adaptation
 from ..utils.tensor import preprocess_angle
 from pytlsd import lsd
@@ -136,7 +136,7 @@ class DeepLSD(BaseModel):
                     pred_df.append(self.denormalize_df(self.df_head(base)))
                 else:
                     pred_df.append(self.df_head(base))
-                pred_angle.append(self.angle_head(base) * np.pi)\
+                pred_angle.append(self.angle_head(base) * np.pi)
 
         # Fuse the outputs together
         for i in range(len(self.conf.scale_factors)):
@@ -218,7 +218,7 @@ class DeepLSD(BaseModel):
             np_df = df.cpu().numpy()
             np_ll = line_level.cpu().numpy()
             outputs['lines'] = self.detect_afm_lines(
-                np_img, np_df, np_ll, **self.conf.line_detection_params)
+                np_img, np_df, np_ll, **self.conf.line_detection_params)[0]
 
         return outputs
 

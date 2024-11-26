@@ -7,6 +7,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Ceres REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
+if(${CERES_VERSION} VERSION_LESS "2.2.0")
+    # ceres 2.2.0 changed the interface of local parameterization
+    add_definitions("-DCERES_PARAMETERIZATION_ENABLED")
+endif()
 
 add_subdirectory(pybind11)
 include_directories(../third_party/progressive-x/graph-cut-ransac/src/pygcransac/include
@@ -32,9 +36,6 @@ if(NOT ProgressiveX_LIB)
 endif()
 
 pybind11_add_module(line_refinement line_vp_optim.cpp cost_functions.h vp_det.h)
-# target_link_libraries(line_refinement PRIVATE ceres stdc++fs
-# 					  ${OpenCV_LIBS} "${GraphCutRANSAC_LIB}"
-# 					  "${ProgressiveX_LIB}")
 target_link_libraries(line_refinement PUBLIC ceres stdc++fs
 					  ${OpenCV_LIBS} "${GraphCutRANSAC_LIB}"
 					  "${ProgressiveX_LIB}")

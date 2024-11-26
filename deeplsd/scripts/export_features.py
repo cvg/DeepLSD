@@ -81,7 +81,7 @@ def export(conf, ckpt, output_folder, extension, pred_vps):
             out0 = net(input0)
             pred_lines['lines'] = out0['lines'][0][:, :, [1, 0]]
             if pred_vps:
-                if conf.model.optimize:
+                if conf.model.line_detection_params.optimize:
                     pred_lines['vps'] = out0['vps'][0]
                     pred_lines['vp_labels'] = out0['vp_labels'][0]
                 else:

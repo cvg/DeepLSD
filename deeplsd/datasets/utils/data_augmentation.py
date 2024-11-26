@@ -156,7 +156,7 @@ def photometric_augmentation(input_img, config):
     
     # Take a random subset of transforms
     n_transforms = len(transforms)
-    n_used = np.random.randint(n_transforms)
+    n_used = np.random.randint(n_transforms + 1)
     transforms = np.random.choice(transforms, n_used, replace=False)
 
     # Apply the transforms

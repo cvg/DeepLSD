@@ -52,10 +52,10 @@ def torch_homography_adaptation(img, net, num_H=10, H_params=default_H_params,
         
     # Loop through all mini batches
     n_mini_batch = int(np.ceil(num_H / bs))
-    dfs = torch.empty((0, h, w), dtype=torch.float, device=device)
-    angles = torch.empty((0, h, w), dtype=torch.float, device=device)
-    offsets = torch.empty((0, h, w, 2), dtype=torch.float, device=device)
-    counts = torch.empty((0, h, w), dtype=torch.float, device=device)
+    dfs = torch.empty((num_H, h, w), dtype=torch.float, device=device)
+    angles = torch.empty((num_H, h, w), dtype=torch.float, device=device)
+    offsets = torch.empty((num_H, h, w, 2), dtype=torch.float, device=device)
+    counts = torch.empty((num_H, h, w), dtype=torch.float, device=device)
     for i in range(n_mini_batch):
         H = Hs[i*bs:(i+1)*bs]
 
@@ -66,17 +66,21 @@ def torch_homography_adaptation(img, net, num_H=10, H_params=default_H_params,
         # Forward pass
         with torch.no_grad():
             outs = net({'image': warped_imgs})
-
+            assert "lines" not in outs, "Please turn off line detection for generation of homographies as this is known to cause memory and performance issues"
+            if "offset" not in outs:
+                outs['offset'] = torch.stack((outs['df']*torch.sin(outs['line_level'] + torch.pi / 2),
+                                          outs['df']*torch.cos(outs['line_level'] + torch.pi / 2)),
+                                          dim=3)
             # Warp back the results
             df, angle, offset, count = warp_afm(
                 outs['df'], outs['line_level'],
                 outs['offset'], torch.inverse(H))
 
         # Aggregate the results
-        dfs = torch.cat([dfs, df], dim=0)
-        angles = torch.cat([angles, angle], dim=0)
-        offsets = torch.cat([offsets, offset], dim=0)
-        counts = torch.cat([counts, count], dim=0)
+        dfs[i*bs:(i+1)*bs] = df
+        angles[i*bs:(i+1)*bs] = angle
+        offsets[i*bs:(i+1)*bs] = offset
+        counts[i*bs:(i+1)*bs] = count
 
     # Aggregate the results
     if aggregation == 'mean':
@@ -84,12 +88,10 @@ def torch_homography_adaptation(img, net, num_H=10, H_params=default_H_params,
         offset = ((offsets * counts.unsqueeze(-1)).sum(dim=0)
                   / counts.sum(dim=0).unsqueeze(-1))
     elif aggregation == 'median':
-        df[counts == 0] = np.nan
-        df = np.nanmedian(df, dim=0)[0]
-        offset[counts == 0] = np.nan
-        offset = np.nanmedian(offset, dim=0)[0]
-        # df = masked_median(dfs, counts)
-        # offset = masked_median(offsets, counts[..., None].repeat(1, 1, 1, 2))
+        dfs[counts == 0] = float("nan")
+        df = torch.nanmedian(dfs, dim=0)[0]
+        offsets[counts == 0] = float("nan")
+        offset = torch.nanmedian(offsets, dim=0)[0]
     else:
         raise ValueError("Unknown aggregation method: " + aggregation)
 
@@ -102,10 +104,8 @@ def torch_homography_adaptation(img, net, num_H=10, H_params=default_H_params,
         angles[:, circ_bound] > np.pi /2,
         torch.ones_like(angles[:, circ_bound]) * np.pi,
         torch.zeros_like(angles[:, circ_bound]))
-    # angle = torch.remainder(masked_median(angles, counts),
-    #                         np.pi).reshape(h, w)
-    angle[counts == 0] = np.nan
-    angle = torch.remainder(torch.nanmedian(angle, dim=0)[0],
+    angles[counts == 0] = float("nan")
+    angle = torch.remainder(torch.nanmedian(angles, dim=0)[0],
                             np.pi).reshape(h, w)
 
     return df, angle, offset

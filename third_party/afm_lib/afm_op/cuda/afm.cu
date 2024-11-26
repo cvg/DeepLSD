@@ -1,7 +1,7 @@
 #include <ATen/ATen.h>
 #include <ATen/cuda/CUDAContext.h>
 
-#include <THC/THC.h>
+// #include <THC/THC.h>
 #include <THC/THCDeviceUtils.cuh>
 
 #include <vector>
@@ -117,6 +117,7 @@ std::tuple<at::Tensor,at::Tensor> afm_cuda(
     
     // THCudaFree(state, aflabel_dev);
     // THCudaFree(state, afmap_dev);
-    THCudaCheck(cudaGetLastError());
+    // THCudaCheck(cudaGetLastError());
+    AT_CUDA_CHECK(cudaGetLastError());
     return std::make_tuple(afmap, aflabel);
 }

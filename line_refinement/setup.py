@@ -9,6 +9,10 @@ from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
 
+# Cores used for building the project
+N_CORES = 8
+
+
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=''):
         Extension.__init__(self, name, sources=[])
@@ -48,6 +52,8 @@ class CMakeBuild(build_ext):
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             build_args += ['--', '-j2']
 
+        cmake_args += ['-DCMAKE_INSTALL_PREFIX=~/.local/']
+
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
             env.get('CXXFLAGS', ''),
@@ -57,7 +63,7 @@ class CMakeBuild(build_ext):
             os.makedirs(self.build_temp)
         print(['cmake', ext.sourcedir] + cmake_args)
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
-        subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
+        subprocess.check_call(['cmake', '--build', '.', "--parallel {0}".format(N_CORES)] + build_args, cwd=self.build_temp)
 
 setup(
     name='line_refinement',

@@ -63,7 +63,7 @@ class PyTLBD(object):
                 list(desc0), list(desc1)))
             pred_matches = -np.ones((len(desc0)), dtype=int)
             if len(my_matches) > 0:
-                pred_matches[my_matches[:, 0]] = my_matches[:, 1]
+                pred_matches[my_matches[:, 0].astype(np.int32)] = my_matches[:, 1].astype(np.int32)
             return pred_matches
         except RuntimeError:
             return -np.ones((len(desc0)), dtype=int)
