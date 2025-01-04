@@ -18,8 +18,6 @@
 #include "ceres/cubic_interpolation.h"
 
 
-using namespace std;
-using namespace ceres;
 
 
 static const int n_samples = 10;
@@ -120,7 +118,7 @@ double nn_interpolator(const double* f, double x, double y, int rows, int cols)
  */
 struct DfCostFunctor {
   explicit DfCostFunctor(
-      const BiCubicInterpolator<Grid2D<double, 1>>& df_interpolator,
+      const ceres::BiCubicInterpolator<ceres::Grid2D<double, 1>>& df_interpolator,
       double len, double cx, double cy)
       : df_interpolator_(df_interpolator), len_(len), cx_(cx), cy_(cy) {}
 
@@ -145,15 +143,15 @@ struct DfCostFunctor {
     return true;
   }
 
-  static CostFunction* Create(
-      const BiCubicInterpolator<Grid2D<double, 1>>& df_interpolator,
+  static ceres::CostFunction* Create(
+      const ceres::BiCubicInterpolator<ceres::Grid2D<double, 1>>& df_interpolator,
       double len, double cx, double cy) {
-    return new AutoDiffCostFunction<DfCostFunctor, n_samples + 1, 1, 1>(
+    return new ceres::AutoDiffCostFunction<DfCostFunctor, n_samples + 1, 1, 1>(
         new DfCostFunctor(df_interpolator, len, cx, cy));
   }
 
  private:
-  const BiCubicInterpolator<Grid2D<double, 1>>& df_interpolator_;
+  const ceres::BiCubicInterpolator<ceres::Grid2D<double, 1>>& df_interpolator_;
   const double len_;
   const double cx_;
   const double cy_;
@@ -197,10 +195,10 @@ struct GradCostFunctor {
     return true;
   }
 
-  static CostFunction* Create(
+  static ceres::CostFunction* Create(
       const double* cos, const double* sin, int rows,
       int cols, double len, double cx, double cy) {
-    return new AutoDiffCostFunction<GradCostFunctor, n_samples - 1, 1, 1>(
+    return new ceres::AutoDiffCostFunction<GradCostFunctor, n_samples - 1, 1, 1>(
         new GradCostFunctor(cos, sin, rows, cols, len, cx, cy));
   }
 
@@ -247,9 +245,9 @@ struct LineVpCostFunctor {
     return true;
   }
 
-  static CostFunction* Create(
+  static ceres::CostFunction* Create(
       double len, double cx, double cy, double* vp) {
-    return new AutoDiffCostFunction<LineVpCostFunctor, 1, 1, 1>(
+    return new ceres::AutoDiffCostFunction<LineVpCostFunctor, 1, 1, 1>(
         new LineVpCostFunctor(len, cx, cy, vp));
   }
 
@@ -285,8 +283,8 @@ struct VpCostFunctor {
     return true;
   }
 
-  static CostFunction* Create(double x1, double y1, double dcx, double dcy) {
-    return new AutoDiffCostFunction<VpCostFunctor, 1, 3>(
+  static ceres::CostFunction* Create(double x1, double y1, double dcx, double dcy) {
+    return new ceres::AutoDiffCostFunction<VpCostFunctor, 1, 3>(
         new VpCostFunctor(x1, y1, dcx, dcy));
   }
 
