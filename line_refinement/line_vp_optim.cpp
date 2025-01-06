@@ -10,6 +10,7 @@
 #include <vector>
 #include <array>
 #include <algorithm>
+#include <tuple>
 
 #include "ceres/ceres.h"
 #include "ceres/cubic_interpolation.h"
@@ -83,7 +84,7 @@ void preprocess_df(vector<double> df, double* df_pad, int rows, int cols)
 
 /** Optimize a set of line endpoints based on a line distance function.
  */
-tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std::array<double, 3>>> optimize_lines(
+std::tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std::array<double, 3>>> optimize_lines(
     std::vector<std::array<double, 5>> lines, int rows, int cols,
     double* df, double* line_level, bool use_vps, bool optimize_vps, double lambda_df,
     double lambda_grad, double lambda_vp, const double &threshold, const size_t &max_iters,
@@ -247,7 +248,7 @@ tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std::arr
  * Returns:
  *      A list of lines defined as [x1, y1, x2, y2].
  */
-tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std::array<double, 3>>> line_optim(
+std::tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std::array<double, 3>>> line_optim(
     std::vector<std::array<double, 5>> lines, std::vector<double> df, std::vector<double> line_level,
     int rows, int cols, bool use_vps, bool optimize_vps, double lambda_df,
     double lambda_grad, double lambda_vp, const double &threshold,
@@ -260,7 +261,7 @@ tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std::arr
     preprocess_df(df, df_pad, rows, cols);
 
     // Extract lines from the distance field
-    tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std::array<double, 3>>> out = optimize_lines(
+    std::tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std::array<double, 3>>> out = optimize_lines(
         lines, rows, cols, df_pad, &line_level[0], use_vps, optimize_vps,
         lambda_df, lambda_grad, lambda_vp, threshold, max_iters,
 	    minimum_point_number, maximum_model_number, scoring_exponent, verbose);
