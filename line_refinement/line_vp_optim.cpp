@@ -231,7 +231,7 @@ std::tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std
     free((void*) cos_angles);
     free((void*) sin_angles);
 
-    return make_tuple(x, vp_labels, vps);
+    return std::make_tuple(x, vp_labels, vps);
 }
 
 
