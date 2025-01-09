@@ -10,6 +10,7 @@
 #include <vector>
 #include <array>
 #include <algorithm>
+#include <tuple>
 
 #include "ceres/ceres.h"
 #include "ceres/cubic_interpolation.h"
@@ -83,8 +84,8 @@ void preprocess_df(vector<double> df, double* df_pad, int rows, int cols)
 
 /** Optimize a set of line endpoints based on a line distance function.
  */
-tuple<vector<array<double, 4>>, vector<int>, vector<array<double, 3>>> optimize_lines(
-    vector<array<double, 5>> lines, int rows, int cols,
+std::tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std::array<double, 3>>> optimize_lines(
+    std::vector<std::array<double, 5>> lines, int rows, int cols,
     double* df, double* line_level, bool use_vps, bool optimize_vps, double lambda_df,
     double lambda_grad, double lambda_vp, const double &threshold, const size_t &max_iters,
 	const size_t &minimum_point_number, const int &maximum_model_number,
@@ -92,7 +93,7 @@ tuple<vector<array<double, 4>>, vector<int>, vector<array<double, 3>>> optimize_
 {
     // Initialize the bicubic interpolator on the DF
     Grid2D<double, 1> df_grid(df, -pad, rows + pad, -pad, cols + pad);
-    BiCubicInterpolator<Grid2D<double, 1>> df_interpolator(df_grid);
+    ceres::BiCubicInterpolator<ceres::Grid2D<double, 1>> df_interpolator(df_grid);
 
     // Initialize the cosine and sine arrays
     size_t size = (size_t) (rows * cols);
@@ -102,14 +103,14 @@ tuple<vector<array<double, 4>>, vector<int>, vector<array<double, 3>>> optimize_
 
     // Initialize the line segments
     const int num_lines = lines.size();
-    vector<array<double, 4>> x(num_lines);
+    std::vector<std::array<double, 4>> x(num_lines);
     for(int i = 0; i < num_lines; i++)
         x[i] = {lines[i][0], lines[i][1], lines[i][2], lines[i][3]};
     double c_x, c_y, ori, len, perp_dist;
 
     // Extract VPs
-    vector<int> vp_labels;
-    vector<array<double, 3> > vps;
+    std::vector<int> vp_labels;
+    std::vector<std::array<double, 3> > vps;
     std::tie(vps, vp_labels) = compute_vps(
         x, cols, rows, threshold, max_iters, minimum_point_number,
         maximum_model_number, scoring_exponent);
@@ -147,7 +148,7 @@ tuple<vector<array<double, 4>>, vector<int>, vector<array<double, 3>>> optimize_
             LossFunction* df_loss = new ScaledLoss(
                 NULL, lambda_df / (n_samples + 1),
                 ceres::TAKE_OWNERSHIP);
-            CostFunction* df_cost_function = DfCostFunctor::Create(
+            ceres::CostFunction* df_cost_function = DfCostFunctor::Create(
                 df_interpolator, len, c_x, c_y);
             problem.AddResidualBlock(df_cost_function, df_loss, &perp_dist, &ori);
 
@@ -157,7 +158,7 @@ tuple<vector<array<double, 4>>, vector<int>, vector<array<double, 3>>> optimize_
                 LossFunction* grad_loss = new ScaledLoss(
                     NULL, lambda_grad / (n_samples - 1),
                     ceres::TAKE_OWNERSHIP);
-                CostFunction* grad_cost_function = GradCostFunctor::Create(
+                ceres::CostFunction* grad_cost_function = GradCostFunctor::Create(
                     cos_angles, sin_angles, rows, cols, len, c_x, c_y);
                 problem.AddResidualBlock(grad_cost_function, grad_loss,
                                          &perp_dist, &ori);
@@ -168,7 +169,7 @@ tuple<vector<array<double, 4>>, vector<int>, vector<array<double, 3>>> optimize_
             {
                 LossFunction* vp_loss = new ScaledLoss(
                     NULL, lambda_vp, ceres::TAKE_OWNERSHIP);
-                CostFunction* vp_cost_function = LineVpCostFunctor::Create(
+                ceres::CostFunction* vp_cost_function = LineVpCostFunctor::Create(
                     len, c_x, c_y, &(vps[vp_labels[i]])[0]);
                 problem.AddResidualBlock(vp_cost_function, vp_loss, &perp_dist, &ori);
             }
@@ -203,7 +204,7 @@ tuple<vector<array<double, 4>>, vector<int>, vector<array<double, 3>>> optimize_
                         len = std::sqrt(pow(x[i][2] - x[i][0], 2) + pow(x[i][3] - x[i][1], 2));
                         LossFunction* vp_loss = new ScaledLoss(
                             new CauchyLoss(0.5), len, ceres::TAKE_OWNERSHIP);
-                        CostFunction* vp_cost_function = VpCostFunctor::Create(
+                        ceres::CostFunction* vp_cost_function = VpCostFunctor::Create(
                             x[j][0], x[j][1], c_x, c_y);
                         problem.AddResidualBlock(vp_cost_function, vp_loss, &(vps[i])[0]);
                     }
@@ -230,7 +231,7 @@ tuple<vector<array<double, 4>>, vector<int>, vector<array<double, 3>>> optimize_
     free((void*) cos_angles);
     free((void*) sin_angles);
 
-    return make_tuple(x, vp_labels, vps);
+    return std::make_tuple(x, vp_labels, vps);
 }
 
 
@@ -247,8 +248,8 @@ tuple<vector<array<double, 4>>, vector<int>, vector<array<double, 3>>> optimize_
  * Returns:
  *      A list of lines defined as [x1, y1, x2, y2].
  */
-tuple<vector<array<double, 4>>, vector<int>, vector<array<double, 3>>> line_optim(
-    vector<array<double, 5>> lines, vector<double> df, vector<double> line_level,
+std::tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std::array<double, 3>>> line_optim(
+    std::vector<std::array<double, 5>> lines, std::vector<double> df, std::vector<double> line_level,
     int rows, int cols, bool use_vps, bool optimize_vps, double lambda_df,
     double lambda_grad, double lambda_vp, const double &threshold,
     const size_t &max_iters, const size_t &minimum_point_number,
@@ -260,7 +261,7 @@ tuple<vector<array<double, 4>>, vector<int>, vector<array<double, 3>>> line_opti
     preprocess_df(df, df_pad, rows, cols);
 
     // Extract lines from the distance field
-    tuple<vector<array<double, 4>>, vector<int>, vector<array<double, 3>>> out = optimize_lines(
+    std::tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std::array<double, 3>>> out = optimize_lines(
         lines, rows, cols, df_pad, &line_level[0], use_vps, optimize_vps,
         lambda_df, lambda_grad, lambda_vp, threshold, max_iters,
 	    minimum_point_number, maximum_model_number, scoring_exponent, verbose);
