@@ -176,3 +176,21 @@ def preprocess_angle(angle, img, mask=False):
         oriented_grad_angle[0] = -1024
         oriented_grad_angle[:, 0] = -1024
     return oriented_grad_angle.astype(np.float64), img_grad_angle
+
+
+def gradientperpendicularToline(angle, img, mask=True, include_perpendicular=True):
+    """ Convert a grad angle field into a line level angle, using
+        the image gradient to get the right orientation. Also returns
+        the original image gradient angle and optionally the perpendicular line angle. """
+    oriented_grad_angle, img_grad_angle = align_with_grad_angle(angle, img)
+    line_angle = np.mod(oriented_grad_angle - np.pi / 2, 2 * np.pi)
+    if mask:
+        line_angle[0] = -1024
+        line_angle[:, 0] = -1024
+        
+    if include_perpendicular:
+        gradientperpendicular_Line = np.mod(line_angle + np.pi / 2, 2 * np.pi)
+        return img_grad_angle,gradientperpendicular_Line.astype(np.float64)
+    else:
+        return img_grad_angle
+

@@ -12,7 +12,7 @@ from .backbones.vgg_unet import VGGUNet
 from ..geometry.line_utils import (merge_lines, get_line_orientation,
                                    filter_outlier_lines)
 from ..geometry.homography_adaptation import torch_homography_adaptation
-from ..utils.tensor import preprocess_angle
+from ..utils.tensor import preprocess_angle,gradientperpendicularToline
 from pytlsd import lsd
 from line_refinement import line_optim
 
@@ -21,7 +21,7 @@ class DeepLSD(BaseModel):
     default_conf = {
         'tiny': False,
         'sharpen': True,
-        'line_neighborhood': 5,
+        'line_neighborhood': 5, #configured
         'loss_weights': {
             'df': 1.,
             'angle': 1.,
@@ -109,17 +109,32 @@ class DeepLSD(BaseModel):
             np_df = outputs['df'].cpu().numpy()
             np_ll = outputs['line_level'].cpu().numpy()
             vps, vp_labels = [], []
+            gradnorms, angles,image_grad_Gaussians,gradientperpendicular_Lines = [], [],[],[]
             for img, df, ll in zip(np_img, np_df, np_ll):
-                line, label, vp = self.detect_afm_lines(
+                line, label, vp, gradnorm, angle ,image_grad_Gaussian,gradientperpendicular_Line= self.detect_afm_lines(
                     img, df, ll, **self.conf.line_detection_params)
                 lines.append(line)
                 vp_labels.append(label)
                 vps.append(vp)
+                
+                # Convert gradnorm and angle to tensors immediately
+                gradnorms.append(torch.tensor(gradnorm))
+                angles.append(torch.tensor(angle))
+                image_grad_Gaussians.append(torch.tensor(image_grad_Gaussian))
+                #image_grad_Gaussian.append(torch.tensor(image_grad_Gaussian.tolist()))
+                gradientperpendicular_Lines.append(torch.tensor(gradientperpendicular_Line))
+                
             outputs['vp_labels'] = vp_labels
             outputs['vps'] = vps
             outputs['lines'] = lines
 
-        return outputs
+            # Stack the tensors along a new dimension
+            outputs['gradnorms'] = torch.stack(gradnorms)
+            outputs['angles'] = torch.stack(angles)
+            outputs['gradientperpendicular_Lines'] = torch.stack(gradientperpendicular_Lines)
+            outputs['image_grad_Gaussians'] = torch.stack(image_grad_Gaussians)
+
+            return outputs
 
     def ms_forward(self, data):
         """ Do several forward passes at multiple image resolutions
@@ -160,6 +175,8 @@ class DeepLSD(BaseModel):
             close-by lines and to optimize them to better fit the DF + angle. """
         gradnorm = np.maximum(5 - df, 0).astype(np.float64)
         angle = line_level.astype(np.float64) - np.pi / 2
+        image_grad_Gaussian,gradientperpendicular_Line=gradientperpendicularToline(angle, img, mask=True)
+        #gradientperpendicular_Line[gradnorm < grad_thresh] = -1024
         angle = preprocess_angle(angle, img, mask=True)[0]
         angle[gradnorm < grad_thresh] = -1024
         lines = lsd(
@@ -184,7 +201,7 @@ class DeepLSD(BaseModel):
         if optimize:
             if merge:
                 lines = merge_lines(lines, thresh=4,
-                                    overlap_thresh=0).astype(np.float32)
+                                    overlap_thresh=8).astype(np.float32)
 
             rows, cols = df.shape
             angle, _ = preprocess_angle(
@@ -202,9 +219,9 @@ class DeepLSD(BaseModel):
         # Merge close-by lines together
         if merge and not optimize:
             lines = merge_lines(lines, thresh=4,
-                                overlap_thresh=0).astype(np.float32)
+                                overlap_thresh=8).astype(np.float32)
 
-        return lines, vp_labels, vps
+        return lines, vp_labels, vps,gradnorm,angle,image_grad_Gaussian,gradientperpendicular_Line
 
     def ha(self, data, num_H=10, aggregation='median'):
         """ Perform homography augmentation at test time on a single image. """
