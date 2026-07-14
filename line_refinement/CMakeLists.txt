@@ -12,6 +12,13 @@ if(${CERES_VERSION} VERSION_LESS "2.2.0")
     add_definitions("-DCERES_PARAMETERIZATION_ENABLED")
 endif()
 
+FIND_PACKAGE(OpenMP)
+if (OPENMP_FOUND)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+endif (OPENMP_FOUND)
+
 add_subdirectory(pybind11)
 include_directories(../third_party/progressive-x/graph-cut-ransac/src/pygcransac/include
 					../third_party/progressive-x/src/pyprogressivex/include
@@ -39,3 +46,7 @@ pybind11_add_module(line_refinement line_vp_optim.cpp cost_functions.h vp_det.h)
 target_link_libraries(line_refinement PUBLIC ceres stdc++fs
 					  ${OpenCV_LIBS} "${GraphCutRANSAC_LIB}"
 					  "${ProgressiveX_LIB}")
+
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(line_refinement PUBLIC OpenMP::OpenMP_CXX)
+endif()
