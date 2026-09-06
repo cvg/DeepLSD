@@ -51,6 +51,8 @@ wget https://cvg-data.inf.ethz.ch/DeepLSD/deeplsd_wireframe.tar -O weights/deepl
 wget https://cvg-data.inf.ethz.ch/DeepLSD/deeplsd_md.tar -O weights/deeplsd_md.tar
 ```
 
+Both models are released under an MIT license, similarly as for the rest of this repo.
+
 ## Ground truth (GT) generation
 DeepLSD requires generating a ground truth for line distance and angle field, through homography adaptation. We provide a Python script to do it for any list of images, leveraging CUDA:
 ```
