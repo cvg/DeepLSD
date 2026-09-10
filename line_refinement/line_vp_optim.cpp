@@ -106,7 +106,6 @@ std::tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std
     std::vector<std::array<double, 4>> x(num_lines);
     for(int i = 0; i < num_lines; i++)
         x[i] = {lines[i][0], lines[i][1], lines[i][2], lines[i][3]};
-    double c_x, c_y, ori, len, perp_dist;
 
     // Extract VPs
     std::vector<int> vp_labels;
@@ -121,19 +120,29 @@ std::tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std
     Solver::Options options;
     options.linear_solver_type = ceres::DENSE_QR;
     options.minimizer_progress_to_stdout = verbose;
-    options.num_threads = 4;
+
+    #ifdef _OPENMP
+        options.num_threads = 1;
+    #else
+        options.num_threads = 4;
+    #endif
+
     options.max_num_iterations = 20;
     if(!optimize_vps)
     {
         num_iter = 1;
         options.max_num_iterations = 100;
     }
-    Solver::Summary summary;
+
     for(int it=0; it < num_iter; it++)
     {
         // Optimize the lines independently using the current VPs
+        #pragma omp parallel for
         for(int i=0; i < num_lines; i++)
-        {   
+        {
+            double c_x, c_y, ori, len, perp_dist;
+
+            Solver::Summary summary;
             /* Optimization with fixed line length and no tangential translation (2 DOFs) */
             c_x = (x[i][0] + x[i][2]) / 2.;
             c_y = (x[i][1] + x[i][3]) / 2.;
@@ -188,8 +197,12 @@ std::tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std
             assign_vps(x, vps, vp_labels, threshold);
 
             // Optimize VPs based on the lines
+            #pragma omp parallel for
             for(int i=0; i < vps.size(); i++)
             {
+                double c_x, c_y, len;
+
+                Solver::Summary summary;
                 // Define the problem
                 Problem problem;
 
@@ -201,7 +214,7 @@ std::tuple<std::vector<std::array<double, 4>>, std::vector<int>, std::vector<std
                         // Get the middle point
                         c_x = (x[j][0] + x[j][2]) / 2;
                         c_y = (x[j][1] + x[j][3]) / 2;
-                        len = std::sqrt(pow(x[i][2] - x[i][0], 2) + pow(x[i][3] - x[i][1], 2));
+                        len = std::sqrt(pow(x[j][2] - x[j][0], 2) + pow(x[j][3] - x[j][1], 2));
                         LossFunction* vp_loss = new ScaledLoss(
                             new CauchyLoss(0.5), len, ceres::TAKE_OWNERSHIP);
                         ceres::CostFunction* vp_cost_function = VpCostFunctor::Create(
